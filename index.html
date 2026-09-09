@@ -632,7 +632,7 @@ function renderMissionsTab(main){
     } else {
       const allCleared = MEMBER_IDX.every(i=>getCell(m.id, setKey, g.id, i));
       html += `<button class="group-clear-btn ${allCleared?'cleared':''}" data-gid="${g.id}">
-        ${allCleared ? '✓ クリア済み（タップで取消）' : 'クリアを記録する'}
+        ${allCleared ? '✓ クリア済み（タップで取消）' : 'クリア'}
       </button>`;
     }
     html += `</div>`;
