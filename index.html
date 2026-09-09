@@ -277,6 +277,8 @@ const MISSIONS = [
   {id:9, title:'最終ミッション', sub:'頂上まで逃げ切れ', type:'group', reward:'デザート券'},
 ];
 const CIRCLED = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨'];
+const GROUP_SIZE = 6; // 1班あたりの人数
+const MEMBER_IDX = Array.from({length: GROUP_SIZE}, (_, i) => i);
 
 let state = {
   tab: 'groups',
@@ -433,7 +435,7 @@ function allCellKeysFor(groups){
   MISSIONS.forEach(m=>{
     SET_KEYS.forEach(s=>{
       groups.forEach(g=>{
-        for(let idx=0; idx<5; idx++) keys.push(cellKey(m.id, s, g.id, idx));
+        for(let idx=0; idx<GROUP_SIZE; idx++) keys.push(cellKey(m.id, s, g.id, idx));
       });
     });
   });
@@ -529,14 +531,14 @@ function renderGroupsTab(main){
 
 function openGroupModal(id){
   const editing = !!id;
-  const g = editing ? state.groups.find(x=>x.id===id) : {id: 'g'+Date.now(), num: nextGroupNum(), members:['','','','','']};
+  const g = editing ? state.groups.find(x=>x.id===id) : {id: 'g'+Date.now(), num: nextGroupNum(), members: MEMBER_IDX.map(()=>'')};
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.innerHTML = `
     <div class="modal">
       <h3>${editing ? g.num+'班を編集' : '新しい班を登録'}</h3>
       <div class="field"><label>班番号</label><input type="number" id="m-num" value="${g.num}" min="1"></div>
-      ${[0,1,2,3,4].map(i=>`<div class="field"><label>メンバー${i+1}の名前</label><input type="text" id="m-name-${i}" value="${escapeHtml(g.members[i]||'')}" placeholder="例：たろう"></div>`).join('')}
+      ${MEMBER_IDX.map(i=>`<div class="field"><label>メンバー${i+1}の名前</label><input type="text" id="m-name-${i}" value="${escapeHtml(g.members[i]||'')}" placeholder="例：たろう"></div>`).join('')}
       <button class="btn-primary" id="m-save">保存する</button>
       <button class="btn-ghost" id="m-cancel" style="margin-top:8px;">キャンセル</button>
     </div>`;
@@ -545,7 +547,7 @@ function openGroupModal(id){
   overlay.onclick = (e)=>{ if(e.target === overlay) overlay.remove(); };
   overlay.querySelector('#m-save').onclick = async ()=>{
     const num = parseInt(overlay.querySelector('#m-num').value) || g.num;
-    const members = [0,1,2,3,4].map(i=>overlay.querySelector('#m-name-'+i).value.trim());
+    const members = MEMBER_IDX.map(i=>overlay.querySelector('#m-name-'+i).value.trim());
     const newGroup = {id: g.id, num, members};
     if(editing){
       const idx = state.groups.findIndex(x=>x.id===id);
@@ -628,7 +630,7 @@ function renderMissionsTab(main){
       });
       html += `</div>`;
     } else {
-      const allCleared = [0,1,2,3,4].every(i=>getCell(m.id, setKey, g.id, i));
+      const allCleared = MEMBER_IDX.every(i=>getCell(m.id, setKey, g.id, i));
       html += `<button class="group-clear-btn ${allCleared?'cleared':''}" data-gid="${g.id}">
         ${allCleared ? '✓ クリア済み（タップで取消）' : 'クリアを記録する'}
       </button>`;
@@ -656,9 +658,9 @@ function renderMissionsTab(main){
     main.querySelectorAll('.group-clear-btn').forEach(btn=>{
       btn.onclick = ()=>{
         const gid = btn.dataset.gid;
-        const cur = [0,1,2,3,4].every(i=>getCell(m.id, setKey, gid, i));
+        const cur = MEMBER_IDX.every(i=>getCell(m.id, setKey, gid, i));
         const newVal = !cur;
-        for(let idx=0; idx<5; idx++) setCellLocal(m.id, setKey, gid, idx, newVal);
+        MEMBER_IDX.forEach(idx => setCellLocal(m.id, setKey, gid, idx, newVal));
         render();
       };
     });
@@ -681,7 +683,7 @@ function renderOverviewTab(main){
     MISSIONS.forEach(m=>{
       let clearedSets = 0;
       SET_KEYS.forEach(s=>{
-        if([0,1,2,3,4].every(i=>getCell(m.id, s, g.id, i))) clearedSets++;
+        if(MEMBER_IDX.every(i=>getCell(m.id, s, g.id, i))) clearedSets++;
       });
       const cls = clearedSets===3 ? 'cell-full' : (clearedSets>0 ? 'cell-partial' : 'cell-none');
       html += `<td class="${cls}">${clearedSets===3?'✓✓✓':(clearedSets>0? clearedSets+'/3':'—')}</td>`;
@@ -690,7 +692,7 @@ function renderOverviewTab(main){
   });
   html += `</tbody></table></div>
     <div style="font-size:11px;color:var(--ink-soft);margin-top:10px;line-height:1.6;">
-      数字＝3セット中で班全員がそのミッションをクリアした回数（①〜④は5人全員が個人クリアした場合にカウント）
+      数字＝3セット中で班全員がそのミッションをクリアした回数（①〜④は${GROUP_SIZE}人全員が個人クリアした場合にカウント）
     </div>`;
   main.innerHTML = html;
 }
