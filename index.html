@@ -287,6 +287,7 @@ let state = {
   currentSet: 1,
   currentMissionId: null,
   loaded: false,
+  loadError: false,
 };
 
 function showToast(msg){
@@ -301,6 +302,21 @@ function showToast(msg){
 const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbzSXSh4Bw9asiCddl4NP6mJ-RS3TslbG7ofu3WFjeD2aL-ToT0MmTudYjLa-rA5Dgmn/exec';
 const BACKEND_TOKEN = 'onigokko2026'; // must match the TOKEN constant in the Apps Script code
 
+function safeParse(str, fallback){
+  try{ return JSON.parse(str); }
+  catch(e){ console.error('JSON parse failed, using fallback', str, e); return fallback; }
+}
+
+async function fetchWithTimeout(url, ms){
+  const controller = new AbortController();
+  const timer = setTimeout(()=>controller.abort(), ms);
+  try{
+    return await fetch(url, {signal: controller.signal});
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function apiGetMany(keys){
   if(keys.length === 0) return {};
   const CHUNK = 25; // keep each GET URL comfortably short
@@ -310,7 +326,7 @@ async function apiGetMany(keys){
     try{
       const url = BACKEND_URL + '?token=' + encodeURIComponent(BACKEND_TOKEN)
         + '&action=getMany&keys=' + encodeURIComponent(JSON.stringify(chunk));
-      const res = await fetch(url);
+      const res = await fetchWithTimeout(url, 10000);
       const data = await res.json();
       Object.assign(result, data);
     }catch(e){ console.error('getMany failed', e); }
@@ -326,7 +342,7 @@ async function apiSet(key, valueString){
     const url = BACKEND_URL + '?token=' + encodeURIComponent(BACKEND_TOKEN)
       + '&action=set&key=' + encodeURIComponent(key)
       + '&value=' + encodeURIComponent(valueString);
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(url, 10000);
     const data = await res.json();
     return !!(data && data.ok);
   }catch(e){ console.error('set failed', e); return false; }
@@ -443,29 +459,40 @@ function allCellKeysFor(groups){
 }
 
 async function loadAll(){
-  const g = await safeGet('groups');
-  state.groups = g ? JSON.parse(g) : [];
-  const keys = allCellKeysFor(state.groups);
-  const remote = await apiGetMany(keys);
-  keys.forEach(k=>{ state.cells[k] = remote[k] ? JSON.parse(remote[k]) : false; });
-  state.loaded = true;
-  updateSyncBadge();
-  render();
-  setInterval(pollRemote, 20000); // pick up other booths' progress without a manual reload
+  try{
+    const g = await safeGet('groups');
+    state.groups = g ? safeParse(g, []) : [];
+    const keys = allCellKeysFor(state.groups);
+    const remote = await apiGetMany(keys);
+    keys.forEach(k=>{ state.cells[k] = remote[k] ? safeParse(remote[k], false) : false; });
+    state.loadError = false;
+  }catch(e){
+    console.error('loadAll failed', e);
+    state.loadError = true;
+  }finally{
+    state.loaded = true;
+    updateSyncBadge();
+    render();
+    if(!window.__pollStarted){
+      window.__pollStarted = true;
+      setInterval(pollRemote, 20000); // pick up other booths' progress without a manual reload
+    }
+  }
 }
 
 async function pollRemote(){
   try{
     const g = await safeGet('groups');
-    const remoteGroups = g ? JSON.parse(g) : [];
+    const remoteGroups = g ? safeParse(g, state.groups) : state.groups;
     if(JSON.stringify(remoteGroups) !== JSON.stringify(state.groups)){
       state.groups = remoteGroups;
     }
     const keys = allCellKeysFor(state.groups).filter(k => !(k in pendingCellTarget));
     const remote = await apiGetMany(keys);
     keys.forEach(k=>{
-      if(remote[k] !== undefined && remote[k] !== null) state.cells[k] = JSON.parse(remote[k]);
+      if(remote[k] !== undefined && remote[k] !== null) state.cells[k] = safeParse(remote[k], state.cells[k]);
     });
+    state.loadError = false;
     render();
   }catch(e){ console.error('poll failed', e); }
 }
@@ -490,9 +517,25 @@ function render(){
     main.innerHTML = '<div class="empty-state">読み込み中…</div>';
     return;
   }
-  if(state.tab === 'groups') renderGroupsTab(main);
-  else if(state.tab === 'missions') renderMissionsTab(main);
-  else renderOverviewTab(main);
+  let html = '';
+  if(state.loadError){
+    html += `<div class="card" style="border-color:var(--oni);background:#FBEDE8;">
+      <div style="font-weight:700;color:var(--oni);margin-bottom:4px;">通信できませんでした</div>
+      <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;">サーバーにつながらないか、機内モード/フィルターの影響が考えられます。Wi-Fiやモバイル通信をご確認のうえ、もう一度お試しください。</div>
+      <button class="btn-ghost" id="retry-load-btn">もう一度読み込む</button>
+    </div>`;
+  }
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  main.innerHTML = '';
+  main.appendChild(container);
+  const contentHost = document.createElement('div');
+  main.appendChild(contentHost);
+  if(state.tab === 'groups') renderGroupsTab(contentHost);
+  else if(state.tab === 'missions') renderMissionsTab(contentHost);
+  else renderOverviewTab(contentHost);
+  const retryBtn = document.getElementById('retry-load-btn');
+  if(retryBtn) retryBtn.onclick = ()=>{ state.loaded = false; render(); loadAll(); };
 }
 
 /* ---------- Groups tab ---------- */
@@ -708,6 +751,13 @@ document.querySelectorAll('nav.tabs button').forEach(b=>{
     if(state.tab === 'missions') state.currentMissionId = null;
     render();
   };
+});
+
+window.addEventListener('error', ()=>{
+  if(!state.loaded){ state.loaded = true; state.loadError = true; render(); }
+});
+window.addEventListener('unhandledrejection', ()=>{
+  if(!state.loaded){ state.loaded = true; state.loadError = true; render(); }
 });
 
 loadAll();
