@@ -170,7 +170,7 @@
   }
   .mission-header .titles{ flex:1; }
   .mission-header .titles .t1{ font-family:var(--font); font-weight:700; font-size:15px; color:var(--pine); }
-  .mission-header .titles .t2{ font-size:11px; color:var(--ink-soft); }
+  .mission-header .titles .t2{ font-size:12px; line-height:1.5; color:var(--ink-soft); }
   .reward-chip{
     display:inline-block; background:var(--curry); color:var(--white);
     font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:99px; margin-top:4px;
@@ -259,15 +259,15 @@
 
 <script>
 const MISSIONS = [
-  {id:1, title:'モンスター討伐', sub:'的当てチャレンジ', type:'individual', reward:'交渉カード'},
-  {id:2, title:'ぴったり10秒', sub:'目を閉じて10秒', type:'individual', reward:'仲間1人解放'},
-  {id:3, title:'クイズ', sub:'三択クイズ', type:'individual', reward:'仲間2人解放'},
-  {id:4, title:'バランス', sub:'片足10秒キープ', type:'individual', reward:'カレー具材カード'},
-  {id:5, title:'パズル', sub:'木製パズル(2人)', type:'group', reward:'白米カード'},
-  {id:6, title:'フープくぐり', sub:'班全員で協力', type:'group', reward:'カレールーカード'},
-  {id:7, title:'巨大ボール運び', sub:'ペアで運搬', type:'group', reward:'調理器具+仲間2人解放'},
-  {id:8, title:'形づくり', sub:'ロープで形作り', type:'group', reward:'お肉カード+交渉カード'},
-  {id:9, title:'最終ミッション', sub:'頂上まで逃げ切れ', type:'group', reward:'デザート券'},
+  {id:1, title:'的当てチャレンジ', sub:'3球中2球を穴に入れる／距離：1〜2年3m、3〜4年5m、5〜6年7m', type:'individual', reward:'交渉カード'},
+  {id:2, title:'ぴったり10秒', sub:'1〜3年：9〜11秒／4〜6年：9.50〜10.50秒で停止できれば成功', type:'individual', reward:'仲間1人解放'},
+  {id:3, title:'クイズ', sub:'四択クイズ', type:'individual', reward:'仲間2人解放'},
+  {id:4, title:'バランス', sub:'棒の上で片足立ち10秒', type:'individual', reward:'カレー具材カード'},
+  {id:5, title:'パズル', sub:'木製パズルを60秒以内に完成', type:'group', reward:'白米カード'},
+  {id:6, title:'フープくぐり', sub:'手をつないだまま5人で30秒以内に通す', type:'group', reward:'カレールーカード'},
+  {id:7, title:'巨大ボール運び', sub:'手を使わず15mを45秒以内に運ぶ', type:'group', reward:'調理器具+仲間2人解放'},
+  {id:8, title:'形づくり', sub:'5人で1本のロープを持って、60秒以内に星形を作る', type:'group', reward:'お肉カード+交渉カード'},
+  {id:9, title:'最終ミッション', sub:'加口以外全員鬼／①〜⑧をクリアした班が参加。指定の鬼を5分以内に全員捕まえる', type:'group', once:true, reward:'デザート券'},
 ];
 const CIRCLED = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨'];
 const GROUP_SIZE = 5; // 1班あたりの人数
@@ -413,7 +413,7 @@ function updateSyncBadge(){
   const n = Object.keys(pendingSaves).length + Object.keys(pendingCellTarget).length;
   sub.textContent = n > 0
     ? '通信中…変更を保存しています'
-    : '① 〜 ⑨ 達成状況をブースで記録・確認';
+    : '① 〜 ⑨ 達成状況をブースで記録・確認　[版 10/21-21:30]';
 }
 
 window.addEventListener('online', attemptFlush);
@@ -495,7 +495,7 @@ async function flushCells(){
 function allCellKeysFor(groups){
   const keys = [];
   MISSIONS.forEach(m=>{
-    SET_KEYS.forEach(s=>{
+    (m.once ? ['set1'] : SET_KEYS).forEach(s=>{
       groups.forEach(g=>{
         for(let idx=0; idx<GROUP_SIZE; idx++) keys.push(cellKey(m.id, s, g.id, idx));
       });
@@ -752,14 +752,14 @@ function renderMissionsTab(main){
         <span class="reward-chip">🎁 ${m.reward}</span>
       </div>
     </div>
-    <div class="set-switch">
+    ${m.once ? '' : `<div class="set-switch">
       <button data-set="1" class="${state.currentSet===1?'active':''}">1セット目</button>
       <button data-set="2" class="${state.currentSet===2?'active':''}">2セット目</button>
       <button data-set="3" class="${state.currentSet===3?'active':''}">3セット目</button>
-    </div>
+    </div>`}
   `;
 
-  const setKey = 'set'+state.currentSet;
+  const setKey = m.once ? 'set1' : 'set'+state.currentSet;
 
   state.groups.forEach(g=>{
     html += `<div class="group-block"><div class="glabel">${g.num}班</div>`;
@@ -824,6 +824,11 @@ function renderOverviewTab(main){
   state.groups.forEach(g=>{
     html += `<tr><td class="gname">${g.num}班</td>`;
     MISSIONS.forEach(m=>{
+      if(m.once){
+        const done = MEMBER_IDX.every(i=>getCell(m.id, 'set1', g.id, i));
+        html += `<td class="${done?'cell-full':'cell-none'}">${done?'✓':'—'}</td>`;
+        return;
+      }
       let clearedSets = 0;
       SET_KEYS.forEach(s=>{
         if(MEMBER_IDX.every(i=>getCell(m.id, s, g.id, i))) clearedSets++;
@@ -835,7 +840,7 @@ function renderOverviewTab(main){
   });
   html += `</tbody></table></div>
     <div style="font-size:11px;color:var(--ink-soft);margin-top:10px;line-height:1.6;">
-      数字＝3セット中で班全員がそのミッションをクリアした回数（①〜④は${GROUP_SIZE}人全員が個人クリアした場合にカウント）
+      数字＝3セット中で班全員がそのミッションをクリアした回数（⑨は1回のみ。①〜④は${GROUP_SIZE}人全員が個人クリアした場合にカウント）
     </div>`;
   main.innerHTML = html;
 }
