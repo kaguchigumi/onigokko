@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ミッション鬼ごっこ 記録アプリ</title>
+<style>
+  :root{
+    --font:-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Noto Sans CJK JP","Yu Gothic",Meiryo,sans-serif;
+    --paper:#EFE6D0;
+    --paper-deep:#E4D8B8;
+    --pine:#24463A;
+    --pine-deep:#173026;
+    --curry:#D98A2B;
+    --curry-deep:#B36F1A;
+    --oni:#C4472C;
+    --ink:#2B2620;
+    --ink-soft:#5C5648;
+    --card:#FBF8EE;
+    --line:#CFC29A;
+    --white:#FFFDF6;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:var(--font);
+    background:
+      radial-gradient(circle at 20% 15%, rgba(36,70,58,0.05) 0, transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(217,138,43,0.07) 0, transparent 45%),
+      var(--paper);
+    color:var(--ink);
+    -webkit-tap-highlight-color:transparent;
+  }
+  #app{ position:relative; z-index:1; max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; }
+
+  header.top{
+    background:var(--pine);
+    color:var(--white);
+    padding:18px 18px 16px;
+    border-bottom:3px solid var(--pine-deep);
+  }
+  header.top h1{
+    font-family:var(--font);
+    font-weight:900;
+    font-size:19px;
+    margin:0 0 2px;
+    letter-spacing:0.02em;
+  }
+  header.top p{
+    margin:0;
+    font-size:12px;
+    color:#CFE0D6;
+  }
+
+  main{ flex:1; padding:14px 14px 90px; }
+
+  nav.tabs{
+    position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+    width:100%; max-width:480px;
+    display:flex;
+    background:var(--pine-deep);
+    border-top:1px solid rgba(255,255,255,0.08);
+    z-index:20;
+  }
+  nav.tabs button{
+    flex:1; padding:10px 4px 12px;
+    background:none; border:none; color:#9FB5AC;
+    font-family:var(--font); font-weight:700; font-size:11px;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    cursor:pointer;
+  }
+  nav.tabs button svg{ width:20px; height:20px; opacity:0.75; }
+  nav.tabs button.active{ color:var(--curry); }
+  nav.tabs button.active svg{ opacity:1; }
+
+  h2.section-title{
+    font-family:var(--font);
+    font-weight:700;
+    font-size:15px;
+    margin:2px 0 10px;
+    color:var(--pine);
+    display:flex; align-items:center; gap:8px;
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px;
+    margin-bottom:10px;
+  }
+
+  /* Groups tab */
+  .group-row{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px;
+  }
+  .group-badge{
+    width:34px; height:34px; border-radius:50%;
+    background:var(--pine); color:var(--white);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font); font-weight:700; font-size:13px;
+    flex-shrink:0;
+  }
+  .group-names{ font-size:12.5px; color:var(--ink-soft); line-height:1.5; flex:1; }
+  .group-names b{ color:var(--ink); font-weight:700; }
+  .icon-btn{
+    border:none; background:var(--paper-deep); color:var(--ink);
+    width:32px; height:32px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .icon-btn.danger{ background:#F3DAD3; color:var(--oni); }
+
+  .btn-primary{
+    width:100%;
+    background:var(--curry); color:var(--white);
+    border:none; border-radius:10px;
+    padding:13px; margin-top:6px;
+    font-family:var(--font); font-weight:700; font-size:14px;
+    cursor:pointer;
+  }
+  .btn-primary:active{ background:var(--curry-deep); }
+  .btn-ghost{
+    width:100%; background:transparent; color:var(--pine);
+    border:1.5px solid var(--pine); border-radius:10px;
+    padding:11px; font-family:var(--font); font-weight:700; font-size:13px;
+    cursor:pointer;
+  }
+
+  .field{ margin-bottom:10px; }
+  .field label{ display:block; font-size:11.5px; color:var(--ink-soft); margin-bottom:4px; font-weight:500; }
+  .field input{
+    width:100%; padding:10px 11px; border:1.5px solid var(--line);
+    border-radius:8px; font-size:14px; font-family:var(--font);
+    background:var(--white); color:var(--ink);
+  }
+  .field input:focus{ outline:2px solid var(--curry); outline-offset:1px; }
+
+  /* Missions tab */
+  .mission-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:6px;
+  }
+  .mission-tile{
+    background:var(--card); border:1.5px solid var(--line); border-radius:10px;
+    padding:10px 6px; text-align:center; cursor:pointer;
+  }
+  .mission-tile .num{
+    font-family:var(--font); font-weight:900; font-size:18px; color:var(--pine);
+  }
+  .mission-tile .name{ font-size:10.5px; color:var(--ink-soft); margin-top:2px; line-height:1.3; }
+  .mission-tile.group-type{ border-color:var(--curry); }
+
+  .set-switch{
+    display:flex; background:var(--paper-deep); border-radius:10px; padding:3px; margin-bottom:12px;
+  }
+  .set-switch button{
+    flex:1; border:none; background:none; padding:9px 0;
+    font-family:var(--font); font-weight:700; font-size:13px; color:var(--ink-soft);
+    border-radius:8px; cursor:pointer;
+  }
+  .set-switch button.active{ background:var(--pine); color:var(--white); }
+
+  .mission-header{
+    display:flex; align-items:center; gap:10px; margin-bottom:12px;
+  }
+  .mission-header button.back{
+    border:none; background:var(--paper-deep); width:32px; height:32px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .mission-header .titles{ flex:1; }
+  .mission-header .titles .t1{ font-family:var(--font); font-weight:700; font-size:15px; color:var(--pine); }
+  .mission-header .titles .t2{ font-size:12px; line-height:1.5; color:var(--ink-soft); }
+  .reward-chip{
+    display:inline-block; background:var(--curry); color:var(--white);
+    font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:99px; margin-top:4px;
+  }
+
+  .member-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); gap:8px; }
+  .member-chip{
+    border:2px solid var(--line); background:var(--white);
+    border-radius:10px; padding:10px 4px; text-align:center; cursor:pointer;
+    font-size:12.5px; font-weight:500; color:var(--ink);
+  }
+  .member-chip.cleared{
+    background:var(--pine); border-color:var(--pine-deep); color:var(--white); font-weight:700;
+  }
+  .member-chip .mark{ display:block; font-size:14px; margin-bottom:2px; }
+
+  .group-clear-btn{
+    width:100%; padding:16px; border-radius:10px; border:2px solid var(--line);
+    background:var(--white); font-family:var(--font); font-weight:700; font-size:14px;
+    color:var(--ink); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .group-clear-btn.cleared{ background:var(--pine); border-color:var(--pine-deep); color:var(--white); }
+
+  .group-block{ margin-bottom:12px; }
+  .group-block .glabel{
+    font-size:11.5px; color:var(--ink-soft); margin-bottom:6px; display:flex; align-items:center; gap:6px;
+  }
+
+  /* Overview */
+  .ov-table-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:10px; background:var(--card); }
+  table.ov{ border-collapse:collapse; width:100%; font-size:11.5px; }
+  table.ov th, table.ov td{ padding:7px 6px; text-align:center; border-bottom:1px solid var(--line); white-space:nowrap; }
+  table.ov th{ background:var(--paper-deep); font-family:var(--font); font-weight:700; color:var(--pine); position:sticky; top:0; }
+  table.ov td.gname{ text-align:left; font-weight:700; color:var(--ink); position:sticky; left:0; background:var(--card); }
+  .cell-full{ color:var(--pine); font-weight:900; }
+  .cell-partial{ color:var(--curry-deep); font-weight:700; }
+  .cell-none{ color:#B7AD8E; }
+
+  .empty-state{
+    text-align:center; padding:30px 14px; color:var(--ink-soft); font-size:13px; line-height:1.7;
+  }
+  .empty-state svg{ opacity:0.4; margin-bottom:8px; }
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(23,48,38,0.55); z-index:50;
+    display:flex; align-items:flex-end; justify-content:center;
+  }
+  .modal{
+    background:var(--paper); width:100%; max-width:480px; border-radius:16px 16px 0 0;
+    padding:18px 18px 24px; max-height:85vh; overflow-y:auto;
+  }
+  .modal h3{ font-family:var(--font); font-size:15px; margin:0 0 14px; color:var(--pine); }
+
+  .toast{
+    position:fixed; bottom:78px; left:50%; transform:translateX(-50%);
+    background:var(--pine-deep); color:var(--white); font-size:12.5px;
+    padding:8px 16px; border-radius:99px; z-index:60; opacity:0; transition:opacity 0.25s;
+    pointer-events:none;
+  }
+  .toast.show{ opacity:1; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <h1>ミッション鬼ごっこ 記録アプリ</h1>
+    <p id="subhead">読み込み中…</p>
+  </header>
+  <main id="main"></main>
+  <nav class="tabs">
+    <button data-tab="groups" class="active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M14.5 14.2c2.6.3 4.5 2.5 4.5 5.3"/></svg>
+      班登録
+    </button>
+    <button data-tab="missions">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21V4l8-2 8 2v17"/><path d="M9 21v-6h6v6"/><circle cx="12" cy="9" r="2"/></svg>
+      ミッション記録
+    </button>
+    <button data-tab="overview">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      全体状況
+    </button>
+  </nav>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+const MISSIONS = [
+  {id:1, title:'的当てチャレンジ', sub:'3球中2球を穴に入れる／距離：1〜2年3m、3〜4年5m、5〜6年7m', type:'individual', reward:'交渉カード'},
+  {id:2, title:'ぴったり10秒', sub:'1〜3年：9〜11秒／4〜6年：9.50〜10.50秒で停止できれば成功', type:'individual', reward:'仲間1人解放'},
+  {id:3, title:'クイズ', sub:'四択クイズ', type:'individual', reward:'仲間2人解放'},
+  {id:4, title:'バランス', sub:'棒の上で片足立ち10秒', type:'individual', reward:'カレー具材カード'},
+  {id:5, title:'パズル', sub:'木製パズルを60秒以内に完成', type:'group', reward:'白米カード'},
+  {id:6, title:'フープくぐり', sub:'手をつないだまま5人で30秒以内に通す', type:'group', reward:'カレールーカード'},
+  {id:7, title:'巨大ボール運び', sub:'手を使わず15mを45秒以内に運ぶ', type:'group', reward:'調理器具+仲間2人解放'},
+  {id:8, title:'形づくり', sub:'5人で1本のロープを持って、60秒以内に星形を作る', type:'group', reward:'お肉カード+交渉カード'},
+  {id:9, title:'最終ミッション', sub:'加口以外全員鬼／①〜⑧をクリアした班が参加。指定の鬼を5分以内に全員捕まえる', type:'group', once:true, reward:'デザート券'},
+];
+const CIRCLED = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨'];
+const GROUP_SIZE = 5; // 1班あたりの人数
+const MEMBER_IDX = Array.from({length: GROUP_SIZE}, (_, i) => i);
+
+let state = {
+  tab: 'groups',
+  groups: [],
+  cells: {},               // 'missionId:setKey:groupId:idx' -> boolean (one storage key per checkbox)
+  currentSet: 1,
+  currentMissionId: null,
+  loaded: false,
+  loadError: false,
+};
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1400);
+}
+
+/* ---- backend: Google Apps Script Web App (no Claude login required) ----
+   Set up once by the organizer; every viewer just opens the published page. */
+const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbyq6OSbtVpRckcuwULe3VCvXlpGDQ_Ixw872GTdz0KZoHjdswSV7o2oPCWV0FgBWvGn/exec';
+const BACKEND_TOKEN = 'onigokko2026'; // must match the TOKEN constant in the Apps Script code
+
+function safeParse(str, fallback){
+  try{ return JSON.parse(str); }
+  catch(e){ console.error('JSON parse failed, using fallback', str, e); return fallback; }
+}
+
+async function fetchWithTimeout(url, ms){
+  const controller = new AbortController();
+  const timer = setTimeout(()=>controller.abort(), ms);
+  try{
+    return await fetch(url, {signal: controller.signal});
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/* Which fast actions the deployed Apps Script supports. Starts optimistic; flipped to
+   false automatically if the backend answers "unknown action" (= not updated yet),
+   in which case the app silently falls back to the older, slower calls. */
+const backendCaps = { getAll: true, setMany: true };
+
+async function apiCall(params, ms){
+  const qs = Object.keys(params)
+    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k])).join('&');
+  const url = BACKEND_URL + '?token=' + encodeURIComponent(BACKEND_TOKEN) + '&' + qs;
+  const res = await fetchWithTimeout(url, ms);
+  return await res.json();
+}
+
+/* Fallback reader (old backend): chunks are requested IN PARALLEL, not one after another.
+   Throws if any chunk fails, so a failed load is reported instead of shown as "all empty". */
+async function apiGetMany(keys){
+  if(keys.length === 0) return {};
+  const CHUNK = 40;
+  const chunks = [];
+  for(let i=0; i<keys.length; i+=CHUNK) chunks.push(keys.slice(i, i+CHUNK));
+  const parts = await Promise.all(chunks.map(async chunk=>{
+    const data = await apiCall({action:'getMany', keys: JSON.stringify(chunk)}, 15000);
+    if(!data || data.error) throw new Error('getMany error');
+    return data;
+  }));
+  return Object.assign({}, ...parts);
+}
+
+async function apiSet(key, valueString){
+  try{
+    const data = await apiCall({action:'set', key: key, value: valueString}, 15000);
+    return !!(data && data.ok);
+  }catch(e){ console.error('set failed', e); return false; }
+}
+
+/* Fast path: ONE request returns every stored value. */
+async function fetchSnapshot(){
+  const startedAt = Date.now();
+  if(backendCaps.getAll){
+    try{
+      const data = await apiCall({action:'getAll'}, 20000);
+      if(data && typeof data === 'object' && !data.error){
+        return {snap: data, startedAt: startedAt};
+      }
+      if(data && data.error === 'unknown action') backendCaps.getAll = false;
+      else throw new Error('getAll error');
+    }catch(e){
+      if(backendCaps.getAll) throw e;      // genuine network/server problem -> report it
+    }
+  }
+  // Backend not updated: groups first, then every cell in parallel chunks.
+  const first = await apiGetMany(['groups']);
+  const groups = first['groups'] ? safeParse(first['groups'], []) : [];
+  const rest = await apiGetMany(allCellKeysFor(groups));
+  rest['groups'] = first['groups'];
+  return {snap: rest, startedAt: startedAt};
+}
+
+/* ---- resilient save queue ----
+   Network calls can fail transiently (wifi at an outdoor event, etc).
+   We keep the latest value per key in a queue and keep retrying quietly
+   in the background instead of blocking the UI or alarming the operator. */
+let pendingSaves = {};
+let syncing = false;
+let syncTimer = null;
+
+function queueSave(key, value){
+  pendingSaves[key] = {value};
+  updateSyncBadge();
+  attemptFlush();
+}
+
+async function attemptFlush(){
+  if(syncing) return;
+  syncing = true;
+  const keys = Object.keys(pendingSaves);
+  for(const key of keys){
+    const entry = pendingSaves[key];
+    if(!entry) continue;
+    try{
+      const r = await apiSet(key, entry.value);
+      if(r){
+        if(pendingSaves[key] && pendingSaves[key].value === entry.value){
+          delete pendingSaves[key];
+        }
+      }
+    }catch(e){
+      console.error('sync failed for', key, e);
+    }
+  }
+  syncing = false;
+  updateSyncBadge();
+  if(Object.keys(pendingSaves).length > 0 && !syncTimer){
+    syncTimer = setTimeout(()=>{ syncTimer = null; attemptFlush(); }, 3000);
+  }
+}
+
+function updateSyncBadge(){
+  const sub = document.getElementById('subhead');
+  if(!sub) return;
+  const n = Object.keys(pendingSaves).length + Object.keys(pendingCellTarget).length;
+  sub.textContent = n > 0
+    ? '通信中…変更を保存しています'
+    : '① 〜 ⑨ 達成状況をブースで記録・確認';
+}
+
+window.addEventListener('online', attemptFlush);
+
+const SET_KEYS = ['set1','set2','set3'];
+
+/* Each checkbox (1 mission x 1 set x 1 group x 1 child) gets its OWN storage key.
+   This means two different booth phones editing two different children can never
+   clobber each other's write — there is nothing to merge, because nothing overlaps.
+   (Verified with a 20-client / 10,000-operation concurrency simulation.) */
+function cellKey(missionId, setKey, groupId, idx){
+  return missionId+':'+setKey+':'+groupId+':'+idx;
+}
+function getCell(missionId, setKey, groupId, idx){
+  return !!state.cells[cellKey(missionId, setKey, groupId, idx)];
+}
+
+const pendingCellTarget = {};   // key -> boolean not yet confirmed saved
+const lastTap = {};             // key -> time of the last local tap (guards against stale refreshes)
+let lastGroupsEdit = 0;
+let flushingCells = false;
+let flushTimer = null;
+
+function setCellLocal(missionId, setKey, groupId, idx, value){
+  const key = cellKey(missionId, setKey, groupId, idx);
+  state.cells[key] = value;
+  pendingCellTarget[key] = value;
+  lastTap[key] = Date.now();
+  updateSyncBadge();
+  scheduleFlush(30);   // short delay so several taps (e.g. a whole-group "クリア") go out as ONE request
+}
+
+function scheduleFlush(delay){
+  if(flushTimer) return;
+  flushTimer = setTimeout(()=>{ flushTimer = null; flushCells(); }, delay);
+}
+
+/* Sends a batch of cell values; returns the list of keys the server confirmed. */
+async function sendCells(map){
+  const keys = Object.keys(map);
+  if(backendCaps.setMany){
+    const payload = {};
+    keys.forEach(k=>{ payload[k] = JSON.stringify(map[k]); });
+    try{
+      const data = await apiCall({action:'setMany', data: JSON.stringify(payload)}, 15000);
+      if(data && data.ok) return keys;
+      if(data && data.error === 'unknown action') backendCaps.setMany = false;   // old backend
+      else return [];
+    }catch(e){ console.error('setMany failed', e); return []; }
+  }
+  // Old backend: one request per cell, sent in parallel.
+  const results = await Promise.all(keys.map(async k=>{
+    return (await apiSet(k, JSON.stringify(map[k]))) ? k : null;
+  }));
+  return results.filter(Boolean);
+}
+
+async function flushCells(){
+  if(flushingCells) return;
+  const keys = Object.keys(pendingCellTarget).slice(0, 30);
+  if(keys.length === 0) return;
+  flushingCells = true;
+  const sent = {};
+  keys.forEach(k=>{ sent[k] = pendingCellTarget[k]; });
+  let confirmed = [];
+  try{ confirmed = await sendCells(sent); }
+  catch(e){ console.error('cell sync failed', e); }
+  confirmed.forEach(k=>{
+    if(pendingCellTarget[k] === sent[k]) delete pendingCellTarget[k];   // keep it if tapped again meanwhile
+  });
+  flushingCells = false;
+  updateSyncBadge();
+  saveCache();
+  if(Object.keys(pendingCellTarget).length > 0){
+    scheduleFlush(confirmed.length > 0 ? 50 : 3000);   // retry quietly if nothing got through
+  }
+}
+
+function allCellKeysFor(groups){
+  const keys = [];
+  MISSIONS.forEach(m=>{
+    (m.once ? ['set1'] : SET_KEYS).forEach(s=>{
+      groups.forEach(g=>{
+        for(let idx=0; idx<GROUP_SIZE; idx++) keys.push(cellKey(m.id, s, g.id, idx));
+      });
+    });
+  });
+  return keys;
+}
+
+/* ---- local cache: the app opens instantly with the last known data, then refreshes ---- */
+const CACHE_KEY = 'onigokko_cache_v1';
+function saveCache(){
+  try{ localStorage.setItem(CACHE_KEY, JSON.stringify({groups: state.groups, cells: state.cells})); }catch(e){}
+}
+function loadCache(){
+  try{
+    const raw = localStorage.getItem(CACHE_KEY);
+    if(!raw) return false;
+    const d = JSON.parse(raw);
+    if(d && Array.isArray(d.groups)){
+      state.groups = d.groups;
+      state.cells = (d.cells && typeof d.cells === 'object') ? d.cells : {};
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
+/* Merge a server snapshot into local state. Never overwrites something this device just
+   changed (still unsent, or tapped after the request started). Returns true if anything changed. */
+function applySnapshot(res){
+  const snap = res.snap, startedAt = res.startedAt;
+  let changed = false;
+  if(!('groups' in pendingSaves) && lastGroupsEdit < startedAt){
+    const raw = snap['groups'];
+    const g = raw ? safeParse(raw, state.groups) : [];
+    if(JSON.stringify(g) !== JSON.stringify(state.groups)){ state.groups = g; changed = true; }
+  }
+  allCellKeysFor(state.groups).forEach(k=>{
+    if(k in pendingCellTarget) return;
+    if((lastTap[k] || 0) >= startedAt) return;
+    const raw = snap[k];
+    const v = (raw !== undefined && raw !== null) ? !!safeParse(raw, false) : false;
+    if(!!state.cells[k] !== v){ state.cells[k] = v; changed = true; }
+  });
+  return changed;
+}
+
+let refreshing = false;
+let lastRefreshAt = 0;
+
+async function refreshFromServer(userVisible){
+  if(refreshing) return;
+  refreshing = true;
+  try{
+    const res = await fetchSnapshot();
+    const changed = applySnapshot(res);
+    saveCache();
+    const wasBroken = state.loadError || !state.loaded;
+    state.loadError = false;
+    state.loaded = true;
+    lastRefreshAt = Date.now();
+    if(changed || wasBroken) render();     // skip pointless re-draws while nothing changed
+  }catch(e){
+    console.error('refresh failed', e);
+    if(userVisible){                       // only the first load / manual retry shows an error
+      state.loadError = true;
+      state.loaded = true;
+      render();
+    }
+  }finally{
+    refreshing = false;
+    updateSyncBadge();
+  }
+}
+
+function startPolling(){
+  if(window.__pollStarted) return;
+  window.__pollStarted = true;
+  const POLL_MS = 30000;
+  setInterval(()=>{
+    if(document.visibilityState === 'hidden') return;           // don't work while the screen is off
+    // old backend = many requests per refresh, so poll less often
+    if(!backendCaps.getAll && Date.now() - lastRefreshAt < 90000) return;
+    refreshFromServer(false);
+  }, POLL_MS);
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'visible') refreshFromServer(false);
+  });
+}
+
+async function loadAll(){
+  if(loadCache()){                   // show last known data immediately
+    state.loaded = true;
+    render();
+  }
+  await refreshFromServer(true);
+  startPolling();
+}
+
+function saveGroups(){
+  lastGroupsEdit = Date.now();
+  queueSave('groups', JSON.stringify(state.groups));
+  saveCache();
+}
+
+function nextGroupNum(){
+  let max = 0;
+  state.groups.forEach(g=>{ if(g.num > max) max = g.num; });
+  return max + 1;
+}
+
+/* ---------- render router ---------- */
+function render(){
+  document.querySelectorAll('nav.tabs button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.tab === state.tab);
+  });
+  const main = document.getElementById('main');
+  if(!state.loaded){
+    main.innerHTML = '<div class="empty-state">読み込み中…</div>';
+    return;
+  }
+  let html = '';
+  if(state.loadError){
+    html += `<div class="card" style="border-color:var(--oni);background:#FBEDE8;">
+      <div style="font-weight:700;color:var(--oni);margin-bottom:4px;">通信できませんでした</div>
+      <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;">サーバーにつながらないか、機内モード/フィルターの影響が考えられます。Wi-Fiやモバイル通信をご確認のうえ、もう一度お試しください。</div>
+      <button class="btn-ghost" id="retry-load-btn">もう一度読み込む</button>
+    </div>`;
+  }
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  main.innerHTML = '';
+  main.appendChild(container);
+  const contentHost = document.createElement('div');
+  main.appendChild(contentHost);
+  if(state.tab === 'groups') renderGroupsTab(contentHost);
+  else if(state.tab === 'missions') renderMissionsTab(contentHost);
+  else renderOverviewTab(contentHost);
+  const retryBtn = document.getElementById('retry-load-btn');
+  if(retryBtn) retryBtn.onclick = ()=>{ state.loaded = false; render(); refreshFromServer(true); };
+}
+
+/* ---------- Groups tab ---------- */
+function renderGroupsTab(main){
+  let html = `<h2 class="section-title">班の登録</h2>`;
+  if(state.groups.length === 0){
+    html += `<div class="empty-state">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg><br>
+      まだ班が登録されていません。<br>下のボタンから班を追加してください。
+    </div>`;
+  } else {
+    state.groups.forEach(g=>{
+      html += `<div class="card group-row">
+        <div class="group-badge">${g.num}班</div>
+        <div class="group-names">${g.members.map((n,i)=>`<b>${escapeHtml(n||'(未入力)')}</b>`).join('　')}</div>
+        <button class="icon-btn" data-action="edit-group" data-id="${g.id}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </button>
+        <button class="icon-btn danger" data-action="delete-group" data-id="${g.id}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+        </button>
+      </div>`;
+    });
+  }
+  html += `<button class="btn-primary" data-action="add-group">＋ 班を追加する</button>`;
+  main.innerHTML = html;
+
+  main.querySelector('[data-action="add-group"]').onclick = ()=>openGroupModal(null);
+  main.querySelectorAll('[data-action="edit-group"]').forEach(b=>{
+    b.onclick = ()=>openGroupModal(b.dataset.id);
+  });
+  main.querySelectorAll('[data-action="delete-group"]').forEach(b=>{
+    b.onclick = ()=>deleteGroup(b.dataset.id);
+  });
+}
+
+function openGroupModal(id){
+  const editing = !!id;
+  const g = editing ? state.groups.find(x=>x.id===id) : {id: 'g'+Date.now(), num: nextGroupNum(), members: MEMBER_IDX.map(()=>'')};
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>${editing ? g.num+'班を編集' : '新しい班を登録'}</h3>
+      <div class="field"><label>班番号</label><input type="number" id="m-num" value="${g.num}" min="1"></div>
+      ${MEMBER_IDX.map(i=>`<div class="field"><label>メンバー${i+1}の名前</label><input type="text" id="m-name-${i}" value="${escapeHtml(g.members[i]||'')}" placeholder="例：たろう"></div>`).join('')}
+      <button class="btn-primary" id="m-save">保存する</button>
+      <button class="btn-ghost" id="m-cancel" style="margin-top:8px;">キャンセル</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#m-cancel').onclick = ()=>overlay.remove();
+  overlay.onclick = (e)=>{ if(e.target === overlay) overlay.remove(); };
+  overlay.querySelector('#m-save').onclick = async ()=>{
+    const num = parseInt(overlay.querySelector('#m-num').value) || g.num;
+    const members = MEMBER_IDX.map(i=>overlay.querySelector('#m-name-'+i).value.trim());
+    const newGroup = {id: g.id, num, members};
+    if(editing){
+      const idx = state.groups.findIndex(x=>x.id===id);
+      state.groups[idx] = newGroup;
+    } else {
+      state.groups.push(newGroup);
+    }
+    state.groups.sort((a,b)=>a.num-b.num);
+    await saveGroups();
+    overlay.remove();
+    showToast('保存しました');
+    render();
+  };
+}
+
+async function deleteGroup(id){
+  if(!confirm('この班のデータを削除しますか？（記録済みのミッション達成状況も消えます）')) return;
+  state.groups = state.groups.filter(g=>g.id!==id);
+  saveGroups();
+  showToast('削除しました');
+  render();
+}
+
+/* ---------- Missions tab ---------- */
+function renderMissionsTab(main){
+  if(state.groups.length === 0){
+    main.innerHTML = `<h2 class="section-title">ミッション記録</h2>
+      <div class="empty-state">先に「班登録」タブで班を登録してください。</div>`;
+    return;
+  }
+  if(state.currentMissionId === null){
+    let html = `<h2 class="section-title">記録するミッションを選択</h2><div class="mission-grid">`;
+    MISSIONS.forEach(m=>{
+      html += `<div class="mission-tile ${m.type==='group'?'group-type':''}" data-id="${m.id}">
+        <div class="num">${CIRCLED[m.id-1]}</div>
+        <div class="name">${m.title}</div>
+      </div>`;
+    });
+    html += `</div>
+      <div style="font-size:11px;color:var(--ink-soft);margin-top:10px;line-height:1.6;">
+        緑枠＝個人ごとに記録　オレンジ枠＝班全員まとめて記録
+      </div>`;
+    main.innerHTML = html;
+    main.querySelectorAll('.mission-tile').forEach(t=>{
+      t.onclick = ()=>{ state.currentMissionId = parseInt(t.dataset.id); render(); };
+    });
+    return;
+  }
+
+  const m = MISSIONS.find(x=>x.id===state.currentMissionId);
+  let html = `
+    <div class="mission-header">
+      <button class="back" id="back-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="titles">
+        <div class="t1">${CIRCLED[m.id-1]} ${m.title}</div>
+        <div class="t2">${m.sub}</div>
+        <span class="reward-chip">🎁 ${m.reward}</span>
+      </div>
+    </div>
+    ${m.once ? '' : `<div class="set-switch">
+      <button data-set="1" class="${state.currentSet===1?'active':''}">1セット目</button>
+      <button data-set="2" class="${state.currentSet===2?'active':''}">2セット目</button>
+      <button data-set="3" class="${state.currentSet===3?'active':''}">3セット目</button>
+    </div>`}
+  `;
+
+  const setKey = m.once ? 'set1' : 'set'+state.currentSet;
+
+  state.groups.forEach(g=>{
+    html += `<div class="group-block"><div class="glabel">${g.num}班</div>`;
+    if(m.type === 'individual'){
+      html += `<div class="member-grid">`;
+      g.members.forEach((name,i)=>{
+        const cleared = getCell(m.id, setKey, g.id, i);
+        html += `<div class="member-chip ${cleared?'cleared':''}" data-gid="${g.id}" data-idx="${i}">
+          <span class="mark">${cleared?'✓':'—'}</span>${escapeHtml(name || 'メンバー'+(i+1))}
+        </div>`;
+      });
+      html += `</div>`;
+    } else {
+      const allCleared = MEMBER_IDX.every(i=>getCell(m.id, setKey, g.id, i));
+      html += `<button class="group-clear-btn ${allCleared?'cleared':''}" data-gid="${g.id}">
+        ${allCleared ? '✓ クリア済み（タップで取消）' : 'クリア'}
+      </button>`;
+    }
+    html += `</div>`;
+  });
+
+  main.innerHTML = html;
+
+  document.getElementById('back-btn').onclick = ()=>{ state.currentMissionId = null; render(); };
+  main.querySelectorAll('.set-switch button').forEach(b=>{
+    b.onclick = ()=>{ state.currentSet = parseInt(b.dataset.set); render(); };
+  });
+
+  if(m.type === 'individual'){
+    main.querySelectorAll('.member-chip').forEach(chip=>{
+      chip.onclick = ()=>{
+        const gid = chip.dataset.gid, idx = parseInt(chip.dataset.idx);
+        const newVal = !getCell(m.id, setKey, gid, idx);
+        setCellLocal(m.id, setKey, gid, idx, newVal);
+        render();
+      };
+    });
+  } else {
+    main.querySelectorAll('.group-clear-btn').forEach(btn=>{
+      btn.onclick = ()=>{
+        const gid = btn.dataset.gid;
+        const cur = MEMBER_IDX.every(i=>getCell(m.id, setKey, gid, i));
+        const newVal = !cur;
+        MEMBER_IDX.forEach(idx => setCellLocal(m.id, setKey, gid, idx, newVal));
+        render();
+      };
+    });
+  }
+}
+
+/* ---------- Overview tab ---------- */
+function renderOverviewTab(main){
+  if(state.groups.length === 0){
+    main.innerHTML = `<h2 class="section-title">全体状況</h2><div class="empty-state">まだ班が登録されていません。</div>`;
+    return;
+  }
+  let html = `<h2 class="section-title">全体状況（3セット合計）</h2>
+    <div class="ov-table-wrap"><table class="ov"><thead><tr><th>班</th>`;
+  MISSIONS.forEach(m=> html += `<th>${CIRCLED[m.id-1]}</th>`);
+  html += `</tr></thead><tbody>`;
+
+  state.groups.forEach(g=>{
+    html += `<tr><td class="gname">${g.num}班</td>`;
+    MISSIONS.forEach(m=>{
+      if(m.once){
+        const done = MEMBER_IDX.every(i=>getCell(m.id, 'set1', g.id, i));
+        html += `<td class="${done?'cell-full':'cell-none'}">${done?'✓':'—'}</td>`;
+        return;
+      }
+      let clearedSets = 0;
+      SET_KEYS.forEach(s=>{
+        if(MEMBER_IDX.every(i=>getCell(m.id, s, g.id, i))) clearedSets++;
+      });
+      const cls = clearedSets===3 ? 'cell-full' : (clearedSets>0 ? 'cell-partial' : 'cell-none');
+      html += `<td class="${cls}">${clearedSets===3?'✓✓✓':(clearedSets>0? clearedSets+'/3':'—')}</td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table></div>
+    <div style="font-size:11px;color:var(--ink-soft);margin-top:10px;line-height:1.6;">
+      数字＝3セット中で班全員がそのミッションをクリアした回数（⑨は1回のみ。①〜④は${GROUP_SIZE}人全員が個人クリアした場合にカウント）
+    </div>`;
+  main.innerHTML = html;
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------- init ---------- */
+document.querySelectorAll('nav.tabs button').forEach(b=>{
+  b.onclick = ()=>{
+    state.tab = b.dataset.tab;
+    if(state.tab === 'missions') state.currentMissionId = null;
+    render();
+  };
+});
+
+window.addEventListener('error', ()=>{
+  if(!state.loaded){ state.loaded = true; state.loadError = true; render(); }
+});
+window.addEventListener('unhandledrejection', ()=>{
+  if(!state.loaded){ state.loaded = true; state.loadError = true; render(); }
+});
+
+loadAll();
+</script>
+</body>
+</html>
