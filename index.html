@@ -4,10 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>ミッション鬼ごっこ 記録アプリ</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
+    --font:-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Noto Sans CJK JP","Yu Gothic",Meiryo,sans-serif;
     --paper:#EFE6D0;
     --paper-deep:#E4D8B8;
     --pine:#24463A;
@@ -24,19 +23,13 @@
   *{box-sizing:border-box;}
   body{
     margin:0;
-    font-family:'Noto Sans JP',sans-serif;
-    background:var(--paper);
+    font-family:var(--font);
+    background:
+      radial-gradient(circle at 20% 15%, rgba(36,70,58,0.05) 0, transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(217,138,43,0.07) 0, transparent 45%),
+      var(--paper);
     color:var(--ink);
     -webkit-tap-highlight-color:transparent;
-  }
-  body::before{
-    content:"";
-    position:fixed;inset:0;
-    background-image:
-      radial-gradient(circle at 20% 15%, rgba(36,70,58,0.05) 0, transparent 40%),
-      radial-gradient(circle at 85% 80%, rgba(217,138,43,0.07) 0, transparent 45%);
-    pointer-events:none;
-    z-index:0;
   }
   #app{ position:relative; z-index:1; max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; }
 
@@ -47,7 +40,7 @@
     border-bottom:3px solid var(--pine-deep);
   }
   header.top h1{
-    font-family:'Zen Maru Gothic',sans-serif;
+    font-family:var(--font);
     font-weight:900;
     font-size:19px;
     margin:0 0 2px;
@@ -72,7 +65,7 @@
   nav.tabs button{
     flex:1; padding:10px 4px 12px;
     background:none; border:none; color:#9FB5AC;
-    font-family:'Zen Maru Gothic',sans-serif; font-weight:700; font-size:11px;
+    font-family:var(--font); font-weight:700; font-size:11px;
     display:flex; flex-direction:column; align-items:center; gap:3px;
     cursor:pointer;
   }
@@ -81,7 +74,7 @@
   nav.tabs button.active svg{ opacity:1; }
 
   h2.section-title{
-    font-family:'Zen Maru Gothic',sans-serif;
+    font-family:var(--font);
     font-weight:700;
     font-size:15px;
     margin:2px 0 10px;
@@ -106,7 +99,7 @@
     width:34px; height:34px; border-radius:50%;
     background:var(--pine); color:var(--white);
     display:flex; align-items:center; justify-content:center;
-    font-family:'Zen Maru Gothic',sans-serif; font-weight:700; font-size:13px;
+    font-family:var(--font); font-weight:700; font-size:13px;
     flex-shrink:0;
   }
   .group-names{ font-size:12.5px; color:var(--ink-soft); line-height:1.5; flex:1; }
@@ -124,14 +117,14 @@
     background:var(--curry); color:var(--white);
     border:none; border-radius:10px;
     padding:13px; margin-top:6px;
-    font-family:'Zen Maru Gothic',sans-serif; font-weight:700; font-size:14px;
+    font-family:var(--font); font-weight:700; font-size:14px;
     cursor:pointer;
   }
   .btn-primary:active{ background:var(--curry-deep); }
   .btn-ghost{
     width:100%; background:transparent; color:var(--pine);
     border:1.5px solid var(--pine); border-radius:10px;
-    padding:11px; font-family:'Zen Maru Gothic',sans-serif; font-weight:700; font-size:13px;
+    padding:11px; font-family:var(--font); font-weight:700; font-size:13px;
     cursor:pointer;
   }
 
@@ -139,7 +132,7 @@
   .field label{ display:block; font-size:11.5px; color:var(--ink-soft); margin-bottom:4px; font-weight:500; }
   .field input{
     width:100%; padding:10px 11px; border:1.5px solid var(--line);
-    border-radius:8px; font-size:14px; font-family:'Noto Sans JP',sans-serif;
+    border-radius:8px; font-size:14px; font-family:var(--font);
     background:var(--white); color:var(--ink);
   }
   .field input:focus{ outline:2px solid var(--curry); outline-offset:1px; }
@@ -153,7 +146,7 @@
     padding:10px 6px; text-align:center; cursor:pointer;
   }
   .mission-tile .num{
-    font-family:'Zen Maru Gothic',sans-serif; font-weight:900; font-size:18px; color:var(--pine);
+    font-family:var(--font); font-weight:900; font-size:18px; color:var(--pine);
   }
   .mission-tile .name{ font-size:10.5px; color:var(--ink-soft); margin-top:2px; line-height:1.3; }
   .mission-tile.group-type{ border-color:var(--curry); }
@@ -163,7 +156,7 @@
   }
   .set-switch button{
     flex:1; border:none; background:none; padding:9px 0;
-    font-family:'Zen Maru Gothic',sans-serif; font-weight:700; font-size:13px; color:var(--ink-soft);
+    font-family:var(--font); font-weight:700; font-size:13px; color:var(--ink-soft);
     border-radius:8px; cursor:pointer;
   }
   .set-switch button.active{ background:var(--pine); color:var(--white); }
@@ -176,7 +169,7 @@
     display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
   }
   .mission-header .titles{ flex:1; }
-  .mission-header .titles .t1{ font-family:'Zen Maru Gothic',sans-serif; font-weight:700; font-size:15px; color:var(--pine); }
+  .mission-header .titles .t1{ font-family:var(--font); font-weight:700; font-size:15px; color:var(--pine); }
   .mission-header .titles .t2{ font-size:11px; color:var(--ink-soft); }
   .reward-chip{
     display:inline-block; background:var(--curry); color:var(--white);
@@ -196,7 +189,7 @@
 
   .group-clear-btn{
     width:100%; padding:16px; border-radius:10px; border:2px solid var(--line);
-    background:var(--white); font-family:'Zen Maru Gothic',sans-serif; font-weight:700; font-size:14px;
+    background:var(--white); font-family:var(--font); font-weight:700; font-size:14px;
     color:var(--ink); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
   }
   .group-clear-btn.cleared{ background:var(--pine); border-color:var(--pine-deep); color:var(--white); }
@@ -210,7 +203,7 @@
   .ov-table-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:10px; background:var(--card); }
   table.ov{ border-collapse:collapse; width:100%; font-size:11.5px; }
   table.ov th, table.ov td{ padding:7px 6px; text-align:center; border-bottom:1px solid var(--line); white-space:nowrap; }
-  table.ov th{ background:var(--paper-deep); font-family:'Zen Maru Gothic',sans-serif; font-weight:700; color:var(--pine); position:sticky; top:0; }
+  table.ov th{ background:var(--paper-deep); font-family:var(--font); font-weight:700; color:var(--pine); position:sticky; top:0; }
   table.ov td.gname{ text-align:left; font-weight:700; color:var(--ink); position:sticky; left:0; background:var(--card); }
   .cell-full{ color:var(--pine); font-weight:900; }
   .cell-partial{ color:var(--curry-deep); font-weight:700; }
@@ -229,7 +222,7 @@
     background:var(--paper); width:100%; max-width:480px; border-radius:16px 16px 0 0;
     padding:18px 18px 24px; max-height:85vh; overflow-y:auto;
   }
-  .modal h3{ font-family:'Zen Maru Gothic',sans-serif; font-size:15px; margin:0 0 14px; color:var(--pine); }
+  .modal h3{ font-family:var(--font); font-size:15px; margin:0 0 14px; color:var(--pine); }
 
   .toast{
     position:fixed; bottom:78px; left:50%; transform:translateX(-50%);
@@ -299,7 +292,7 @@ function showToast(msg){
 
 /* ---- backend: Google Apps Script Web App (no Claude login required) ----
    Set up once by the organizer; every viewer just opens the published page. */
-const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbzSXSh4Bw9asiCddl4NP6mJ-RS3TslbG7ofu3WFjeD2aL-ToT0MmTudYjLa-rA5Dgmn/exec';
+const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbyq6OSbtVpRckcuwULe3VCvXlpGDQ_Ixw872GTdz0KZoHjdswSV7o2oPCWV0FgBWvGn/exec';
 const BACKEND_TOKEN = 'onigokko2026'; // must match the TOKEN constant in the Apps Script code
 
 function safeParse(str, fallback){
@@ -317,39 +310,62 @@ async function fetchWithTimeout(url, ms){
   }
 }
 
+/* Which fast actions the deployed Apps Script supports. Starts optimistic; flipped to
+   false automatically if the backend answers "unknown action" (= not updated yet),
+   in which case the app silently falls back to the older, slower calls. */
+const backendCaps = { getAll: true, setMany: true };
+
+async function apiCall(params, ms){
+  const qs = Object.keys(params)
+    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k])).join('&');
+  const url = BACKEND_URL + '?token=' + encodeURIComponent(BACKEND_TOKEN) + '&' + qs;
+  const res = await fetchWithTimeout(url, ms);
+  return await res.json();
+}
+
+/* Fallback reader (old backend): chunks are requested IN PARALLEL, not one after another.
+   Throws if any chunk fails, so a failed load is reported instead of shown as "all empty". */
 async function apiGetMany(keys){
   if(keys.length === 0) return {};
-  const CHUNK = 25; // keep each GET URL comfortably short
-  const result = {};
-  for(let i=0; i<keys.length; i+=CHUNK){
-    const chunk = keys.slice(i, i+CHUNK);
-    try{
-      const url = BACKEND_URL + '?token=' + encodeURIComponent(BACKEND_TOKEN)
-        + '&action=getMany&keys=' + encodeURIComponent(JSON.stringify(chunk));
-      const res = await fetchWithTimeout(url, 10000);
-      const data = await res.json();
-      Object.assign(result, data);
-    }catch(e){ console.error('getMany failed', e); }
-  }
-  return result;
+  const CHUNK = 40;
+  const chunks = [];
+  for(let i=0; i<keys.length; i+=CHUNK) chunks.push(keys.slice(i, i+CHUNK));
+  const parts = await Promise.all(chunks.map(async chunk=>{
+    const data = await apiCall({action:'getMany', keys: JSON.stringify(chunk)}, 15000);
+    if(!data || data.error) throw new Error('getMany error');
+    return data;
+  }));
+  return Object.assign({}, ...parts);
 }
-async function apiGetOne(key){
-  const r = await apiGetMany([key]);
-  return (r && r[key] !== undefined) ? r[key] : null;
-}
+
 async function apiSet(key, valueString){
   try{
-    const url = BACKEND_URL + '?token=' + encodeURIComponent(BACKEND_TOKEN)
-      + '&action=set&key=' + encodeURIComponent(key)
-      + '&value=' + encodeURIComponent(valueString);
-    const res = await fetchWithTimeout(url, 10000);
-    const data = await res.json();
+    const data = await apiCall({action:'set', key: key, value: valueString}, 15000);
     return !!(data && data.ok);
   }catch(e){ console.error('set failed', e); return false; }
 }
 
-async function safeGet(key){
-  return await apiGetOne(key);
+/* Fast path: ONE request returns every stored value. */
+async function fetchSnapshot(){
+  const startedAt = Date.now();
+  if(backendCaps.getAll){
+    try{
+      const data = await apiCall({action:'getAll'}, 20000);
+      if(data && typeof data === 'object' && !data.error){
+        return {snap: data, startedAt: startedAt};
+      }
+      if(data && data.error === 'unknown action') backendCaps.getAll = false;
+      else throw new Error('getAll error');
+    }catch(e){
+      if(backendCaps.getAll) throw e;      // genuine network/server problem -> report it
+    }
+  }
+  // Backend not updated: groups first, then every cell in parallel chunks.
+  const first = await apiGetMany(['groups']);
+  const groups = first['groups'] ? safeParse(first['groups'], []) : [];
+  const rest = await apiGetMany(allCellKeysFor(groups));
+  rest['groups'] = first['groups'];
+  return {snap: rest, startedAt: startedAt};
 }
 
 /* ---- resilient save queue ----
@@ -416,33 +432,63 @@ function getCell(missionId, setKey, groupId, idx){
 }
 
 const pendingCellTarget = {};   // key -> boolean not yet confirmed saved
-const flushingCellKeys = new Set();
+const lastTap = {};             // key -> time of the last local tap (guards against stale refreshes)
+let lastGroupsEdit = 0;
+let flushingCells = false;
+let flushTimer = null;
 
 function setCellLocal(missionId, setKey, groupId, idx, value){
   const key = cellKey(missionId, setKey, groupId, idx);
   state.cells[key] = value;
   pendingCellTarget[key] = value;
+  lastTap[key] = Date.now();
   updateSyncBadge();
-  flushCell(key);
+  scheduleFlush(30);   // short delay so several taps (e.g. a whole-group "クリア") go out as ONE request
 }
 
-async function flushCell(key){
-  if(flushingCellKeys.has(key)) return;
-  if(!(key in pendingCellTarget)) return;
-  flushingCellKeys.add(key);
-  const target = pendingCellTarget[key];
-  try{
-    const r = await apiSet(key, JSON.stringify(target));
-    if(r && pendingCellTarget[key] === target){
-      delete pendingCellTarget[key];
-    }
-  }catch(e){
-    console.error('cell sync failed', key, e);
+function scheduleFlush(delay){
+  if(flushTimer) return;
+  flushTimer = setTimeout(()=>{ flushTimer = null; flushCells(); }, delay);
+}
+
+/* Sends a batch of cell values; returns the list of keys the server confirmed. */
+async function sendCells(map){
+  const keys = Object.keys(map);
+  if(backendCaps.setMany){
+    const payload = {};
+    keys.forEach(k=>{ payload[k] = JSON.stringify(map[k]); });
+    try{
+      const data = await apiCall({action:'setMany', data: JSON.stringify(payload)}, 15000);
+      if(data && data.ok) return keys;
+      if(data && data.error === 'unknown action') backendCaps.setMany = false;   // old backend
+      else return [];
+    }catch(e){ console.error('setMany failed', e); return []; }
   }
-  flushingCellKeys.delete(key);
+  // Old backend: one request per cell, sent in parallel.
+  const results = await Promise.all(keys.map(async k=>{
+    return (await apiSet(k, JSON.stringify(map[k]))) ? k : null;
+  }));
+  return results.filter(Boolean);
+}
+
+async function flushCells(){
+  if(flushingCells) return;
+  const keys = Object.keys(pendingCellTarget).slice(0, 30);
+  if(keys.length === 0) return;
+  flushingCells = true;
+  const sent = {};
+  keys.forEach(k=>{ sent[k] = pendingCellTarget[k]; });
+  let confirmed = [];
+  try{ confirmed = await sendCells(sent); }
+  catch(e){ console.error('cell sync failed', e); }
+  confirmed.forEach(k=>{
+    if(pendingCellTarget[k] === sent[k]) delete pendingCellTarget[k];   // keep it if tapped again meanwhile
+  });
+  flushingCells = false;
   updateSyncBadge();
-  if(key in pendingCellTarget){
-    setTimeout(()=>flushCell(key), 3000);
+  saveCache();
+  if(Object.keys(pendingCellTarget).length > 0){
+    scheduleFlush(confirmed.length > 0 ? 50 : 3000);   // retry quietly if nothing got through
   }
 }
 
@@ -458,47 +504,101 @@ function allCellKeysFor(groups){
   return keys;
 }
 
-async function loadAll(){
+/* ---- local cache: the app opens instantly with the last known data, then refreshes ---- */
+const CACHE_KEY = 'onigokko_cache_v1';
+function saveCache(){
+  try{ localStorage.setItem(CACHE_KEY, JSON.stringify({groups: state.groups, cells: state.cells})); }catch(e){}
+}
+function loadCache(){
   try{
-    const g = await safeGet('groups');
-    state.groups = g ? safeParse(g, []) : [];
-    const keys = allCellKeysFor(state.groups);
-    const remote = await apiGetMany(keys);
-    keys.forEach(k=>{ state.cells[k] = remote[k] ? safeParse(remote[k], false) : false; });
-    state.loadError = false;
-  }catch(e){
-    console.error('loadAll failed', e);
-    state.loadError = true;
-  }finally{
-    state.loaded = true;
-    updateSyncBadge();
-    render();
-    if(!window.__pollStarted){
-      window.__pollStarted = true;
-      setInterval(pollRemote, 20000); // pick up other booths' progress without a manual reload
+    const raw = localStorage.getItem(CACHE_KEY);
+    if(!raw) return false;
+    const d = JSON.parse(raw);
+    if(d && Array.isArray(d.groups)){
+      state.groups = d.groups;
+      state.cells = (d.cells && typeof d.cells === 'object') ? d.cells : {};
+      return true;
     }
+  }catch(e){}
+  return false;
+}
+
+/* Merge a server snapshot into local state. Never overwrites something this device just
+   changed (still unsent, or tapped after the request started). Returns true if anything changed. */
+function applySnapshot(res){
+  const snap = res.snap, startedAt = res.startedAt;
+  let changed = false;
+  if(!('groups' in pendingSaves) && lastGroupsEdit < startedAt){
+    const raw = snap['groups'];
+    const g = raw ? safeParse(raw, state.groups) : [];
+    if(JSON.stringify(g) !== JSON.stringify(state.groups)){ state.groups = g; changed = true; }
+  }
+  allCellKeysFor(state.groups).forEach(k=>{
+    if(k in pendingCellTarget) return;
+    if((lastTap[k] || 0) >= startedAt) return;
+    const raw = snap[k];
+    const v = (raw !== undefined && raw !== null) ? !!safeParse(raw, false) : false;
+    if(!!state.cells[k] !== v){ state.cells[k] = v; changed = true; }
+  });
+  return changed;
+}
+
+let refreshing = false;
+let lastRefreshAt = 0;
+
+async function refreshFromServer(userVisible){
+  if(refreshing) return;
+  refreshing = true;
+  try{
+    const res = await fetchSnapshot();
+    const changed = applySnapshot(res);
+    saveCache();
+    const wasBroken = state.loadError || !state.loaded;
+    state.loadError = false;
+    state.loaded = true;
+    lastRefreshAt = Date.now();
+    if(changed || wasBroken) render();     // skip pointless re-draws while nothing changed
+  }catch(e){
+    console.error('refresh failed', e);
+    if(userVisible){                       // only the first load / manual retry shows an error
+      state.loadError = true;
+      state.loaded = true;
+      render();
+    }
+  }finally{
+    refreshing = false;
+    updateSyncBadge();
   }
 }
 
-async function pollRemote(){
-  try{
-    const g = await safeGet('groups');
-    const remoteGroups = g ? safeParse(g, state.groups) : state.groups;
-    if(JSON.stringify(remoteGroups) !== JSON.stringify(state.groups)){
-      state.groups = remoteGroups;
-    }
-    const keys = allCellKeysFor(state.groups).filter(k => !(k in pendingCellTarget));
-    const remote = await apiGetMany(keys);
-    keys.forEach(k=>{
-      if(remote[k] !== undefined && remote[k] !== null) state.cells[k] = safeParse(remote[k], state.cells[k]);
-    });
-    state.loadError = false;
+function startPolling(){
+  if(window.__pollStarted) return;
+  window.__pollStarted = true;
+  const POLL_MS = 30000;
+  setInterval(()=>{
+    if(document.visibilityState === 'hidden') return;           // don't work while the screen is off
+    // old backend = many requests per refresh, so poll less often
+    if(!backendCaps.getAll && Date.now() - lastRefreshAt < 90000) return;
+    refreshFromServer(false);
+  }, POLL_MS);
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'visible') refreshFromServer(false);
+  });
+}
+
+async function loadAll(){
+  if(loadCache()){                   // show last known data immediately
+    state.loaded = true;
     render();
-  }catch(e){ console.error('poll failed', e); }
+  }
+  await refreshFromServer(true);
+  startPolling();
 }
 
 function saveGroups(){
+  lastGroupsEdit = Date.now();
   queueSave('groups', JSON.stringify(state.groups));
+  saveCache();
 }
 
 function nextGroupNum(){
@@ -535,7 +635,7 @@ function render(){
   else if(state.tab === 'missions') renderMissionsTab(contentHost);
   else renderOverviewTab(contentHost);
   const retryBtn = document.getElementById('retry-load-btn');
-  if(retryBtn) retryBtn.onclick = ()=>{ state.loaded = false; render(); loadAll(); };
+  if(retryBtn) retryBtn.onclick = ()=>{ state.loaded = false; render(); refreshFromServer(true); };
 }
 
 /* ---------- Groups tab ---------- */
