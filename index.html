@@ -152,10 +152,11 @@
   .mission-tile.group-type{ border-color:var(--curry); }
 
   .set-switch{
-    display:flex; background:var(--paper-deep); border-radius:10px; padding:3px; margin-bottom:12px;
+    display:flex; flex-wrap:wrap; gap:2px; background:var(--paper-deep); border-radius:10px; padding:3px; margin-bottom:12px;
   }
+  .set-switch button small{ display:block; font-size:10px; font-weight:500; opacity:.8; }
   .set-switch button{
-    flex:1; border:none; background:none; padding:9px 0;
+    flex:1 1 30%; border:none; background:none; padding:7px 0;
     font-family:var(--font); font-weight:700; font-size:13px; color:var(--ink-soft);
     border-radius:8px; cursor:pointer;
   }
@@ -413,12 +414,16 @@ function updateSyncBadge(){
   const n = Object.keys(pendingSaves).length + Object.keys(pendingCellTarget).length;
   sub.textContent = n > 0
     ? '通信中…変更を保存しています'
-    : '① 〜 ⑨ 達成状況をブースで記録・確認　[版 10/21-21:45]';
+    : '① 〜 ⑨ 達成状況をブースで記録・確認　[版 10/21-23:50]';
 }
 
 window.addEventListener('online', attemptFlush);
 
-const SET_KEYS = ['set1','set2','set3'];
+const SET_KEYS = ['set1','set2','set3','set4','set5','set6'];
+/* 1・3・5セット目＝1〜3班、2・4・6セット目＝4〜6班。各班は3セットずつ。 */
+function groupIsA(g){ return g.num <= 3; }
+function setsForGroup(g){ return groupIsA(g) ? ['set1','set3','set5'] : ['set2','set4','set6']; }
+function groupsInSet(n){ const odd = n % 2 === 1; return state.groups.filter(g => groupIsA(g) === odd); }
 
 /* Each checkbox (1 mission x 1 set x 1 group x 1 child) gets its OWN storage key.
    This means two different booth phones editing two different children can never
@@ -495,8 +500,8 @@ async function flushCells(){
 function allCellKeysFor(groups){
   const keys = [];
   MISSIONS.forEach(m=>{
-    (m.once ? ['set1'] : SET_KEYS).forEach(s=>{
-      groups.forEach(g=>{
+    groups.forEach(g=>{
+      (m.once ? ['set1'] : setsForGroup(g)).forEach(s=>{
         for(let idx=0; idx<GROUP_SIZE; idx++) keys.push(cellKey(m.id, s, g.id, idx));
       });
     });
@@ -753,15 +758,17 @@ function renderMissionsTab(main){
       </div>
     </div>
     ${m.once ? '' : `<div class="set-switch">
-      <button data-set="1" class="${state.currentSet===1?'active':''}">1セット目</button>
-      <button data-set="2" class="${state.currentSet===2?'active':''}">2セット目</button>
-      <button data-set="3" class="${state.currentSet===3?'active':''}">3セット目</button>
+      ${[1,2,3,4,5,6].map(n=>`<button data-set="${n}" class="${state.currentSet===n?'active':''}">${n}セット目<small>${n%2===1?'1〜3班':'4〜6班'}</small></button>`).join('')}
     </div>`}
   `;
 
   const setKey = m.once ? 'set1' : 'set'+state.currentSet;
 
-  state.groups.forEach(g=>{
+  const shownGroups = m.once ? state.groups : groupsInSet(state.currentSet);
+  if(shownGroups.length === 0){
+    html += `<div class="empty-state">このセットの班（${state.currentSet%2===1?'1〜3班':'4〜6班'}）はまだ登録されていません。</div>`;
+  }
+  shownGroups.forEach(g=>{
     html += `<div class="group-block"><div class="glabel">${g.num}班</div>`;
     if(m.type === 'individual'){
       html += `<div class="member-grid">`;
@@ -816,7 +823,7 @@ function renderOverviewTab(main){
     main.innerHTML = `<h2 class="section-title">全体状況</h2><div class="empty-state">まだ班が登録されていません。</div>`;
     return;
   }
-  let html = `<h2 class="section-title">全体状況（3セット合計）</h2>
+  let html = `<h2 class="section-title">全体状況（各班3セット合計）</h2>
     <div class="ov-table-wrap"><table class="ov"><thead><tr><th>班</th>`;
   MISSIONS.forEach(m=> html += `<th>${CIRCLED[m.id-1]}</th>`);
   html += `</tr></thead><tbody>`;
@@ -830,7 +837,7 @@ function renderOverviewTab(main){
         return;
       }
       let clearedSets = 0;
-      SET_KEYS.forEach(s=>{
+      setsForGroup(g).forEach(s=>{
         if(MEMBER_IDX.every(i=>getCell(m.id, s, g.id, i))) clearedSets++;
       });
       const cls = clearedSets===3 ? 'cell-full' : (clearedSets>0 ? 'cell-partial' : 'cell-none');
@@ -840,7 +847,7 @@ function renderOverviewTab(main){
   });
   html += `</tbody></table></div>
     <div style="font-size:11px;color:var(--ink-soft);margin-top:10px;line-height:1.6;">
-      数字＝3セット中で班全員がそのミッションをクリアした回数（⑨は1回のみ。①〜④は${GROUP_SIZE}人全員が個人クリアした場合にカウント）
+      数字＝各班の3セット（1〜3班は1・3・5セット目、4〜6班は2・4・6セット目）中で班全員がそのミッションをクリアした回数（⑨は1回のみ。①〜④は${GROUP_SIZE}人全員が個人クリアした場合にカウント）
     </div>`;
   main.innerHTML = html;
 }
