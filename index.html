@@ -29,7 +29,7 @@
       radial-gradient(circle at 85% 80%, rgba(217,138,43,0.07) 0, transparent 45%),
       var(--paper);
     color:var(--ink);
-    -webkit-tap-highlight-color:transparent;
+    -webkit-tap-highlight-color:transparent; touch-action:manipulation;
   }
   #app{ position:relative; z-index:1; max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; }
 
@@ -177,16 +177,19 @@
     font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:99px; margin-top:4px;
   }
 
-  .member-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); gap:8px; }
+  .member-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
   .member-chip{
     border:2px solid var(--line); background:var(--white);
-    border-radius:10px; padding:10px 4px; text-align:center; cursor:pointer;
-    font-size:12.5px; font-weight:500; color:var(--ink);
+    border-radius:12px; padding:0 8px; min-height:52px; cursor:pointer;
+    display:flex; align-items:center; gap:8px;
+    font-size:15px; font-weight:700; color:var(--ink); line-height:1.25;
   }
+  .member-chip .nm{ flex:1; min-width:0; overflow-wrap:anywhere; text-wrap:balance; }
   .member-chip.cleared{
     background:var(--pine); border-color:var(--pine-deep); color:var(--white); font-weight:700;
   }
-  .member-chip .mark{ display:block; font-size:14px; margin-bottom:2px; }
+  .member-chip .mark{ flex:none; width:24px; height:24px; border-radius:50%; background:var(--paper-deep); color:var(--ink-soft); display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .member-chip.cleared .mark{ background:var(--white); color:var(--pine); }
 
   .group-clear-btn{
     width:100%; padding:16px; border-radius:10px; border:2px solid var(--line);
@@ -414,7 +417,7 @@ function updateSyncBadge(){
   const n = Object.keys(pendingSaves).length + Object.keys(pendingCellTarget).length;
   sub.textContent = n > 0
     ? '通信中…変更を保存しています'
-    : '① 〜 ⑨ 達成状況をブースで記録・確認　[版 10/21-23:50]';
+    : '① 〜 ⑨ 達成状況をブースで記録・確認　[版 10/22-00:25]';
 }
 
 window.addEventListener('online', attemptFlush);
@@ -511,7 +514,12 @@ function allCellKeysFor(groups){
 
 /* ---- local cache: the app opens instantly with the last known data, then refreshes ---- */
 const CACHE_KEY = 'onigokko_cache_v1';
+let cacheTimer = null;
 function saveCache(){
+  if(cacheTimer) return;                       // at most one write per 400ms
+  cacheTimer = setTimeout(()=>{ cacheTimer = null; writeCache(); }, 400);
+}
+function writeCache(){
   try{ localStorage.setItem(CACHE_KEY, JSON.stringify({groups: state.groups, cells: state.cells})); }catch(e){}
 }
 function loadCache(){
@@ -775,7 +783,7 @@ function renderMissionsTab(main){
       g.members.forEach((name,i)=>{
         const cleared = getCell(m.id, setKey, g.id, i);
         html += `<div class="member-chip ${cleared?'cleared':''}" data-gid="${g.id}" data-idx="${i}">
-          <span class="mark">${cleared?'✓':'—'}</span>${escapeHtml(name || 'メンバー'+(i+1))}
+          <span class="mark">${cleared?'✓':'—'}</span><span class="nm">${escapeHtml(name || 'メンバー'+(i+1))}</span>
         </div>`;
       });
       html += `</div>`;
@@ -801,7 +809,8 @@ function renderMissionsTab(main){
         const gid = chip.dataset.gid, idx = parseInt(chip.dataset.idx);
         const newVal = !getCell(m.id, setKey, gid, idx);
         setCellLocal(m.id, setKey, gid, idx, newVal);
-        render();
+        chip.classList.toggle('cleared', newVal);               // update just this chip (no full redraw)
+        chip.querySelector('.mark').textContent = newVal ? '✓' : '—';
       };
     });
   } else {
@@ -811,7 +820,8 @@ function renderMissionsTab(main){
         const cur = MEMBER_IDX.every(i=>getCell(m.id, setKey, gid, i));
         const newVal = !cur;
         MEMBER_IDX.forEach(idx => setCellLocal(m.id, setKey, gid, idx, newVal));
-        render();
+        btn.classList.toggle('cleared', newVal);                // update just this button (no full redraw)
+        btn.textContent = newVal ? '✓ クリア済み（タップで取消）' : 'クリア';
       };
     });
   }
