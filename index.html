@@ -259,7 +259,7 @@
 
 <script>
 const MISSIONS = [
-  {id:1, title:'的当てチャレンジ', sub:'3球中2球を穴に入れる／距離：1〜2年3m、3〜4年5m、5〜6年7m', type:'individual', reward:'交渉カード'},
+  {id:1, title:'的当てチャレンジ', sub:'3球中2球を穴に入れる／距離：1〜3年3m、4〜6年5m', type:'individual', reward:'交渉カード'},
   {id:2, title:'ぴったり10秒', sub:'1〜3年：9〜11秒／4〜6年：9.50〜10.50秒で停止できれば成功', type:'individual', reward:'仲間1人解放'},
   {id:3, title:'クイズ', sub:'四択クイズ', type:'individual', reward:'仲間2人解放'},
   {id:4, title:'バランス', sub:'棒の上で片足立ち10秒', type:'individual', reward:'カレー具材カード'},
@@ -413,7 +413,7 @@ function updateSyncBadge(){
   const n = Object.keys(pendingSaves).length + Object.keys(pendingCellTarget).length;
   sub.textContent = n > 0
     ? '通信中…変更を保存しています'
-    : '① 〜 ⑨ 達成状況をブースで記録・確認　[版 10/21-21:30]';
+    : '① 〜 ⑨ 達成状況をブースで記録・確認　[版 10/21-21:45]';
 }
 
 window.addEventListener('online', attemptFlush);
