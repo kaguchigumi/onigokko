@@ -100,7 +100,7 @@
     background:var(--pine); color:var(--white);
     display:flex; align-items:center; justify-content:center;
     font-family:var(--font); font-weight:700; font-size:13px;
-    flex-shrink:0;
+    flex-shrink:0; border:2px solid rgba(0,0,0,.28);
   }
   .group-names{ font-size:12.5px; color:var(--ink-soft); line-height:1.5; flex:1; }
   .group-names b{ color:var(--ink); font-weight:700; }
@@ -202,6 +202,13 @@
   .group-block .glabel{
     font-size:11.5px; color:var(--ink-soft); margin-bottom:6px; display:flex; align-items:center; gap:6px;
   }
+  .group-block .glabel .gnum{ font-size:16px; font-weight:700; color:var(--ink); }
+  .group-block .glabel .bib-note{ font-size:11px; }
+  .bib-tag{
+    display:inline-block; padding:2px 10px; border-radius:99px; font-size:13px; font-weight:700;
+    border:1.5px solid rgba(0,0,0,.28); line-height:1.4; vertical-align:middle;
+  }
+  table.ov td.gname .bib-tag{ font-size:11px; padding:1px 7px; margin-left:2px; }
 
   /* Overview */
   .ov-table-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:10px; background:var(--card); }
@@ -417,11 +424,26 @@ function updateSyncBadge(){
   const n = Object.keys(pendingSaves).length + Object.keys(pendingCellTarget).length;
   sub.textContent = n > 0
     ? '通信中…変更を保存しています'
-    : '① 〜 ⑨ 達成状況をブースで記録・確認　[版 10/23-11:20]';
+    : '① 〜 ⑨ 達成状況をブースで記録・確認　[版 10/24-00:20]';
 }
 
 window.addEventListener('online', attemptFlush);
 
+/* ビブス（班ごとの色） */
+const BIBS = {
+  1:{name:'赤',      bg:'#D93025', fg:'#FFFFFF'},
+  2:{name:'紫',      bg:'#7B3FA0', fg:'#FFFFFF'},
+  3:{name:'白',      bg:'#FFFFFF', fg:'#1F2A24'},
+  4:{name:'黄',      bg:'#F5C518', fg:'#1F2A24'},
+  5:{name:'オレンジ', bg:'#F28C28', fg:'#1F2A24'},
+  6:{name:'きみどり', bg:'#A8D63C', fg:'#1F2A24'},
+};
+function bibOf(num){ return BIBS[num] || null; }
+function bibStyle(num){ const b = bibOf(num); return b ? `background:${b.bg};color:${b.fg};` : ''; }
+function bibTag(num){           // 「赤」などの色名ラベル（色つき）
+  const b = bibOf(num); if(!b) return '';
+  return `<span class="bib-tag" style="${bibStyle(num)}">${b.name}</span>`;
+}
 const SET_KEYS = ['set1','set2','set3','set4','set5','set6'];
 /* 1・3・5セット目＝1〜3班、2・4・6セット目＝4〜6班。各班は3セットずつ。 */
 function groupIsA(g){ return g.num <= 3; }
@@ -662,7 +684,7 @@ function renderGroupsTab(main){
   } else {
     state.groups.forEach(g=>{
       html += `<div class="card group-row">
-        <div class="group-badge">${g.num}班</div>
+        <div class="group-badge" style="${bibStyle(g.num)}">${g.num}班</div>
         <div class="group-names">${g.members.map((n,i)=>`<b>${escapeHtml(n||'(未入力)')}</b>`).join('　')}</div>
         <button class="icon-btn" data-action="edit-group" data-id="${g.id}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
@@ -777,7 +799,7 @@ function renderMissionsTab(main){
     html += `<div class="empty-state">このセットの班（${state.currentSet%2===1?'1〜3班':'4〜6班'}）はまだ登録されていません。</div>`;
   }
   shownGroups.forEach(g=>{
-    html += `<div class="group-block"><div class="glabel">${g.num}班</div>`;
+    html += `<div class="group-block"><div class="glabel"><span class="gnum">${g.num}班</span>${bibTag(g.num)}<span class="bib-note">ビブス</span></div>`;
     if(m.type === 'individual'){
       html += `<div class="member-grid">`;
       g.members.forEach((name,i)=>{
@@ -839,7 +861,7 @@ function renderOverviewTab(main){
   html += `</tr></thead><tbody>`;
 
   state.groups.forEach(g=>{
-    html += `<tr><td class="gname">${g.num}班</td>`;
+    html += `<tr><td class="gname">${g.num}班 ${bibTag(g.num)}</td>`;
     MISSIONS.forEach(m=>{
       if(m.once){
         const done = MEMBER_IDX.every(i=>getCell(m.id, 'set1', g.id, i));
