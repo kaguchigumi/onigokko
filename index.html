@@ -269,7 +269,7 @@ const MISSIONS = [
   {id:4, title:'バランス', sub:'棒の上で片足立ち10秒', type:'individual', reward:'カレー具材カード'},
   {id:5, title:'パズル', sub:'木製パズルを60秒以内に完成', type:'group', reward:'白米カード'},
   {id:6, title:'フープくぐり', sub:'手をつないだまま5人で30秒以内に通す', type:'group', reward:'カレールーカード'},
-  {id:7, title:'巨大ボール運び', sub:'手を使わず15mを45秒以内に運ぶ', type:'group', reward:'調理器具+仲間2人解放'},
+  {id:7, title:'巨大ボール運び', sub:'手を使わず15mを45秒以内に運ぶ', type:'group', reward:'調理器具'},
   {id:8, title:'形づくり', sub:'5人で1本のロープを持って、60秒以内に星形を作る', type:'group', reward:'お肉カード+交渉カード'},
   {id:9, title:'最終ミッション', sub:'加口以外全員鬼／①〜⑧をクリアした班が参加。指定の鬼を5分以内に全員捕まえる', type:'group', once:true, reward:'デザート券'},
 ];
@@ -417,7 +417,7 @@ function updateSyncBadge(){
   const n = Object.keys(pendingSaves).length + Object.keys(pendingCellTarget).length;
   sub.textContent = n > 0
     ? '通信中…変更を保存しています'
-    : '① 〜 ⑨ 達成状況をブースで記録・確認　[版 10/22-00:25]';
+    : '① 〜 ⑨ 達成状況をブースで記録・確認　[版 10/23-11:20]';
 }
 
 window.addEventListener('online', attemptFlush);
