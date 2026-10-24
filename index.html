@@ -424,7 +424,7 @@ function updateSyncBadge(){
   const n = Object.keys(pendingSaves).length + Object.keys(pendingCellTarget).length;
   sub.textContent = n > 0
     ? '通信中…変更を保存しています'
-    : '① 〜 ⑨ 達成状況をブースで記録・確認　[版 10/24-00:20]';
+    : '① 〜 ⑨ 達成状況をブースで記録・確認　[版 10/25-06:30]';
 }
 
 window.addEventListener('online', attemptFlush);
@@ -863,6 +863,11 @@ function renderOverviewTab(main){
   state.groups.forEach(g=>{
     html += `<tr><td class="gname">${g.num}班 ${bibTag(g.num)}</td>`;
     MISSIONS.forEach(m=>{
+      if(m.type === 'individual'){      // ①〜④：3セットのうち誰か1人でもクリアしていればOK
+        const anyone = setsForGroup(g).some(sk => MEMBER_IDX.some(i=>getCell(m.id, sk, g.id, i)));
+        html += `<td class="${anyone?'cell-full':'cell-none'}">${anyone?'✓':'—'}</td>`;
+        return;
+      }
       if(m.once){
         const done = MEMBER_IDX.every(i=>getCell(m.id, 'set1', g.id, i));
         html += `<td class="${done?'cell-full':'cell-none'}">${done?'✓':'—'}</td>`;
@@ -879,7 +884,8 @@ function renderOverviewTab(main){
   });
   html += `</tbody></table></div>
     <div style="font-size:11px;color:var(--ink-soft);margin-top:10px;line-height:1.6;">
-      数字＝各班の3セット（1〜3班は1・3・5セット目、4〜6班は2・4・6セット目）中で班全員がそのミッションをクリアした回数（⑨は1回のみ。①〜④は${GROUP_SIZE}人全員が個人クリアした場合にカウント）
+      ①〜④：3セットのうち、班の誰か1人でもクリアしていれば「✓」。
+      ⑤〜⑧：数字＝3セット（1〜3班は1・3・5セット目、4〜6班は2・4・6セット目）中で班全員がクリアした回数。⑨は1回のみ。
     </div>`;
   main.innerHTML = html;
 }
