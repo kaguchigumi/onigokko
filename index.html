@@ -184,7 +184,10 @@
     display:flex; align-items:center; gap:8px;
     font-size:15px; font-weight:700; color:var(--ink); line-height:1.25;
   }
-  .member-chip .nm{ flex:1; min-width:0; overflow-wrap:anywhere; text-wrap:balance; }
+  .member-chip .bibno{ flex:none; font-size:11px; font-weight:700; color:var(--ink-soft); background:var(--paper-deep); border-radius:99px; padding:1px 7px; }
+  .member-chip.cleared .bibno{ background:rgba(255,255,255,.2); color:var(--white); }
+  .bibno-inline{ font-size:10.5px; font-weight:500; color:var(--ink-soft); }
+  .member-chip .nm{ flex:1; min-width:0; word-break:keep-all; overflow-wrap:break-word; text-wrap:balance; }
   .member-chip.cleared{
     background:var(--pine); border-color:var(--pine-deep); color:var(--white); font-weight:700;
   }
@@ -283,6 +286,23 @@ const MISSIONS = [
 const CIRCLED = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨'];
 const GROUP_SIZE = 5; // 1班あたりの人数
 const MEMBER_IDX = Array.from({length: GROUP_SIZE}, (_, i) => i);
+
+/* 名前が空欄のメンバーは「いない」扱い（班の人数が5人未満のとき用）。全員空欄の班だけは5人分表示。 */
+function activeIdx(g){
+  const idx = MEMBER_IDX.filter(i => (g.members[i] || '').trim() !== '');
+  return idx.length ? idx : MEMBER_IDX;
+}
+/* 名前の先頭に付いたビブナンバー（例「12 山田太郎」「No.12 山田」「12山田」）を分けて表示する */
+function parseMember(raw, i){
+  const t = (raw || '').trim();
+  if(!t) return {no:'', name:'メンバー'+(i+1)};
+  const m = t.match(/^(?:No\.?|NO\.?|no\.?|№|#|＃)?\s*([0-9０-９]{1,3})[\s\u3000.．\-－ー・:：)）]*([^0-9０-９].*)$/);
+  if(m && m[2].trim()){
+    const no = m[1].replace(/[０-９]/g, c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
+    return {no, name:m[2].trim()};
+  }
+  return {no:'', name:t};
+}
 
 let state = {
   tab: 'groups',
@@ -424,7 +444,7 @@ function updateSyncBadge(){
   const n = Object.keys(pendingSaves).length + Object.keys(pendingCellTarget).length;
   sub.textContent = n > 0
     ? '通信中…変更を保存しています'
-    : '① 〜 ⑨ 達成状況をブースで記録・確認　[版 10/25-06:30]';
+    : '① 〜 ⑨ 達成状況をブースで記録・確認　[版 10/25-07:00]';
 }
 
 window.addEventListener('online', attemptFlush);
@@ -685,7 +705,7 @@ function renderGroupsTab(main){
     state.groups.forEach(g=>{
       html += `<div class="card group-row">
         <div class="group-badge" style="${bibStyle(g.num)}">${g.num}班</div>
-        <div class="group-names">${g.members.map((n,i)=>`<b>${escapeHtml(n||'(未入力)')}</b>`).join('　')}</div>
+        <div class="group-names">${activeIdx(g).map(i=>{ const pm = parseMember(g.members[i], i); return `<b>${escapeHtml(pm.name)}${pm.no?` <small class="bibno-inline">No.${escapeHtml(pm.no)}</small>`:''}</b>`; }).join('　')}</div>
         <button class="icon-btn" data-action="edit-group" data-id="${g.id}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
         </button>
@@ -717,6 +737,7 @@ function openGroupModal(id){
       <h3>${editing ? g.num+'班を編集' : '新しい班を登録'}</h3>
       <div class="field"><label>班番号</label><input type="number" id="m-num" value="${g.num}" min="1"></div>
       ${MEMBER_IDX.map(i=>`<div class="field"><label>メンバー${i+1}の名前</label><input type="text" id="m-name-${i}" value="${escapeHtml(g.members[i]||'')}" placeholder="例：たろう"></div>`).join('')}
+      <div style="font-size:11.5px;color:var(--ink-soft);margin:-2px 0 10px;line-height:1.5;">※ 名前を空欄にしたメンバーは表示されません（5人未満の班はこれで人数を減らせます）。</div>
       <button class="btn-primary" id="m-save">保存する</button>
       <button class="btn-ghost" id="m-cancel" style="margin-top:8px;">キャンセル</button>
     </div>`;
@@ -802,15 +823,16 @@ function renderMissionsTab(main){
     html += `<div class="group-block"><div class="glabel"><span class="gnum">${g.num}班</span>${bibTag(g.num)}<span class="bib-note">ビブス</span></div>`;
     if(m.type === 'individual'){
       html += `<div class="member-grid">`;
-      g.members.forEach((name,i)=>{
+      activeIdx(g).forEach(i=>{
+        const pm = parseMember(g.members[i], i);
         const cleared = getCell(m.id, setKey, g.id, i);
         html += `<div class="member-chip ${cleared?'cleared':''}" data-gid="${g.id}" data-idx="${i}">
-          <span class="mark">${cleared?'✓':'—'}</span><span class="nm">${escapeHtml(name || 'メンバー'+(i+1))}</span>
+          <span class="mark">${cleared?'✓':'—'}</span><span class="nm">${escapeHtml(pm.name)}</span>${pm.no ? `<span class="bibno">${escapeHtml(pm.no)}</span>` : ''}
         </div>`;
       });
       html += `</div>`;
     } else {
-      const allCleared = MEMBER_IDX.every(i=>getCell(m.id, setKey, g.id, i));
+      const allCleared = activeIdx(g).every(i=>getCell(m.id, setKey, g.id, i));
       html += `<button class="group-clear-btn ${allCleared?'cleared':''}" data-gid="${g.id}">
         ${allCleared ? '✓ クリア済み（タップで取消）' : 'クリア'}
       </button>`;
@@ -839,9 +861,11 @@ function renderMissionsTab(main){
     main.querySelectorAll('.group-clear-btn').forEach(btn=>{
       btn.onclick = ()=>{
         const gid = btn.dataset.gid;
-        const cur = MEMBER_IDX.every(i=>getCell(m.id, setKey, gid, i));
+        const gg = state.groups.find(x=>x.id===gid);
+        const act = activeIdx(gg);
+        const cur = act.every(i=>getCell(m.id, setKey, gid, i));
         const newVal = !cur;
-        MEMBER_IDX.forEach(idx => setCellLocal(m.id, setKey, gid, idx, newVal));
+        act.forEach(idx => setCellLocal(m.id, setKey, gid, idx, newVal));
         btn.classList.toggle('cleared', newVal);                // update just this button (no full redraw)
         btn.textContent = newVal ? '✓ クリア済み（タップで取消）' : 'クリア';
       };
@@ -864,18 +888,18 @@ function renderOverviewTab(main){
     html += `<tr><td class="gname">${g.num}班 ${bibTag(g.num)}</td>`;
     MISSIONS.forEach(m=>{
       if(m.type === 'individual'){      // ①〜④：3セットのうち誰か1人でもクリアしていればOK
-        const anyone = setsForGroup(g).some(sk => MEMBER_IDX.some(i=>getCell(m.id, sk, g.id, i)));
+        const anyone = setsForGroup(g).some(sk => activeIdx(g).some(i=>getCell(m.id, sk, g.id, i)));
         html += `<td class="${anyone?'cell-full':'cell-none'}">${anyone?'✓':'—'}</td>`;
         return;
       }
       if(m.once){
-        const done = MEMBER_IDX.every(i=>getCell(m.id, 'set1', g.id, i));
+        const done = activeIdx(g).every(i=>getCell(m.id, 'set1', g.id, i));
         html += `<td class="${done?'cell-full':'cell-none'}">${done?'✓':'—'}</td>`;
         return;
       }
       let clearedSets = 0;
       setsForGroup(g).forEach(s=>{
-        if(MEMBER_IDX.every(i=>getCell(m.id, s, g.id, i))) clearedSets++;
+        if(activeIdx(g).every(i=>getCell(m.id, s, g.id, i))) clearedSets++;
       });
       const cls = clearedSets===3 ? 'cell-full' : (clearedSets>0 ? 'cell-partial' : 'cell-none');
       html += `<td class="${cls}">${clearedSets===3?'✓✓✓':(clearedSets>0? clearedSets+'/3':'—')}</td>`;
